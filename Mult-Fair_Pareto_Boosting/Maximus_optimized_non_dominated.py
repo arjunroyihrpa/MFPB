@@ -38,6 +38,9 @@ from sklearn.tree.tree import BaseDecisionTree, DTYPE, DecisionTreeClassifier
 from sklearn.utils.validation import has_fit_parameter, check_is_fitted, check_array, check_X_y, check_random_state
 import statistics as st
 from pymoo.factory import get_decision_making, get_reference_directions
+
+from selection import PreferenceSurvival
+
 __all__ = [
     'Multi_Fair'
 ]
@@ -247,9 +250,15 @@ class BaseWeightBoosting(six.with_metaclass(ABCMeta, BaseEnsemble)):
         self.PF={i:self.ob[i] for i in range(len(pf)) if pf[i]==True}
         F=np.array(list(self.PF.values()))
         
-        weights = self.preference  ##Preference Weights
-        best_theta, self.pseudo_weights = get_decision_making("pseudo-weights", weights).do(F, return_pseudo_weights=True)
-        self.theta = list(self.PF.keys())[best_theta] + 1
+        # weights = self.preference  ##Preference Weights
+        # best_theta, self.pseudo_weights = get_decision_making("pseudo-weights", weights).do(F, return_pseudo_weights=True)
+        # self.theta = list(self.PF.keys())[best_theta] + 1
+
+        # * These are the lines that will select the optimal solution set according to
+        # * NDS around the preference vectors
+        preference_vectors = self.preference.reshape(-1, F.shape[1])
+        self.optimal_solution_set = PreferenceSurvival(preference_vectors).do(self.ob, F)
+
 
         if self.debug:
             print ("best partial ensemble at round: "+ str(self.theta ))
