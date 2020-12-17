@@ -38,7 +38,7 @@ class PreferenceSurvival:
         Parameters
         ----------
         solutions : np.array
-            Array matrix of all solutions in the COMPLETE final set. 
+            Array matrix of all solutions in the COMPLETE final set.
             I.e., NDS has not been applied yet!
         objective_values : np.array
             Array matrix of the objective values for each of the solutions.
@@ -58,6 +58,7 @@ class PreferenceSurvival:
         self.worst_point = np.max(np.vstack((self.worst_point, F)), axis=0)
 
         # calculate the fronts of the population
+        # TODO maybe we should remove n_survive as we want to sort all anyway?
         fronts, rank = NonDominatedSorting().do(
             F, return_rank=True, n_stop_if_ranked=n_survive
         )
@@ -103,44 +104,45 @@ class PreferenceSurvival:
         #     "rank", rank, "niche", niche_of_individuals, "dist_to_niche", dist_to_niche
         # )
 
-        # ? Not needed or?
-        # # set the optimum, first front and closest to all reference directions
-        # closest = np.unique(
-        #     dist_matrix[:, np.unique(niche_of_individuals)].argmin(axis=0)
-        # )
+        # set the optimum, first front and closest to all reference directions
+        closest = np.unique(
+            dist_matrix[:, np.unique(niche_of_individuals)].argmin(axis=0)
+        )
 
-        # ? Not needed or?
-        # self.opt = pop[intersect(fronts[0], closest)]
+        # * Select best solution per preference vector here
+        optimal_solutions = solutions[intersect(fronts[0], closest)]
 
-        # if we need to select individuals to survive
-        if len(solutions) > n_survive:
+        # ! We don't need that as we are only interested in the best solution
+        # ! per preference vector
+        # # if we need to select individuals to survive
+        # if len(solutions) > n_survive:
 
-            # if there is only one front
-            if len(fronts) == 1:
-                n_remaining = n_survive
-                until_last_front = np.array([], dtype=np.int)
-                niche_count = np.zeros(len(self.ref_dirs), dtype=np.int)
+        #     # if there is only one front
+        #     if len(fronts) == 1:
+        #         n_remaining = n_survive
+        #         until_last_front = np.array([], dtype=np.int)
+        #         niche_count = np.zeros(len(self.ref_dirs), dtype=np.int)
 
-            # if some individuals already survived
-            else:
-                until_last_front = np.concatenate(fronts[:-1])
-                niche_count = calc_niche_count(
-                    len(self.ref_dirs), niche_of_individuals[until_last_front]
-                )
-                n_remaining = n_survive - len(until_last_front)
+        #     # if some individuals already survived
+        #     else:
+        #         until_last_front = np.concatenate(fronts[:-1])
+        #         niche_count = calc_niche_count(
+        #             len(self.ref_dirs), niche_of_individuals[until_last_front]
+        #         )
+        #         n_remaining = n_survive - len(until_last_front)
 
-            S = niching(
-                solutions[last_front],
-                n_remaining,
-                niche_count,
-                niche_of_individuals[last_front],
-                dist_to_niche[last_front],
-            )
+        #     S = niching(
+        #         solutions[last_front],
+        #         n_remaining,
+        #         niche_count,
+        #         niche_of_individuals[last_front],
+        #         dist_to_niche[last_front],
+        #     )
 
-            survivors = np.concatenate((until_last_front, last_front[S].tolist()))
-            solutions = solutions[survivors]
+        #     survivors = np.concatenate((until_last_front, last_front[S].tolist()))
+        #     solutions = solutions[survivors]
 
-        return solutions
+        return optimal_solutions
 
 
 def associate_to_niches(F, niches, ideal_point, nadir_point, utopian_epsilon=0.0):
