@@ -29,7 +29,7 @@ class PreferenceSurvival:
         self.ideal_point = np.full(preference_vectors.shape[1], np.inf)
         self.worst_point = np.full(preference_vectors.shape[1], -np.inf)
 
-    def do(self, solutions, objective_values, n_survive):
+    def do(self, solutions, objective_values, n_survive, filter_duplicates=True):
         """
         Applies the non-dominated filtering based on the provided preference vectors.
         NDS is applied with respect to the preference vectors. I.e. each solution gets sorted
@@ -44,11 +44,15 @@ class PreferenceSurvival:
             Array matrix of the objective values for each of the solutions.
         n_survive : int
             Number of solutions that shall survive at most.
+        filter_duplicates : bool
+            Filter the final set of solutions if it contains duplicates.
+            Else, at most as many as preference_vectors can be selected.
 
         Returns
         -------
         np.array
             NDS solutions with respect to the preference vectors.
+            Is equal to at most the number of preference vectors we have.
         """
         # attributes to be set after the survival
         F = objective_values
@@ -114,6 +118,7 @@ class PreferenceSurvival:
 
         # ! We don't need that as we are only interested in the best solution
         # ! per preference vector
+        # * This could be used if we were interested to pick more solutions than the optimal ones
         # # if we need to select individuals to survive
         # if len(solutions) > n_survive:
 
@@ -141,6 +146,9 @@ class PreferenceSurvival:
 
         #     survivors = np.concatenate((until_last_front, last_front[S].tolist()))
         #     solutions = solutions[survivors]
+
+        if filter_duplicates:
+            return np.unique(optimal_solutions, axis=0)
 
         return optimal_solutions
 
