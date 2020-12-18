@@ -20,6 +20,8 @@ from pymoo.util.misc import intersect, has_feasible
 
 class PreferenceSurvival:
     def __init__(self, preference_vectors):
+        # ! Important
+        # ? Is each solution feasible already? Is this is validated before?
         # super().__init__(filter_infeasible=True)
         self.ref_dirs = preference_vectors
         self.extreme_points = None
@@ -56,6 +58,8 @@ class PreferenceSurvival:
         """
         # attributes to be set after the survival
         F = objective_values
+        # compute the final solution set index in parallel
+        running_index = np.arange(len(F))
 
         if n_survive is None:
             # Select at most as many as we have solution candidates
@@ -93,7 +97,12 @@ class PreferenceSurvival:
 
         #  consider only the population until we come to the splitting front
         I = np.concatenate(fronts)
-        solutions, rank, F = solutions[I], rank[I], F[I]
+        solutions, rank, F, running_index = (
+            solutions[I],
+            rank[I],
+            F[I],
+            running_index[I],
+        )
 
         # update the front indices for the current population
         counter = 0
@@ -121,6 +130,7 @@ class PreferenceSurvival:
 
         # * Select best solution per preference vector here
         optimal_solutions = solutions[intersect(fronts[0], closest)]
+        running_index = running_index[intersect(fronts[0], closest)]
 
         # ! We don't need that as we are only interested in the best solution
         # ! per preference vector
@@ -154,9 +164,12 @@ class PreferenceSurvival:
         #     solutions = solutions[survivors]
 
         if filter_duplicates:
-            return np.unique(optimal_solutions, axis=0)
+            optimal_solutions, unique_idx = np.unique(
+                optimal_solutions, return_index=True, axis=0
+            )
+            running_index = running_index[unique_idx]
 
-        return optimal_solutions
+        return optimal_solutions, running_index
 
 
 def associate_to_niches(F, niches, ideal_point, nadir_point, utopian_epsilon=0.0):
