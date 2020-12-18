@@ -257,13 +257,13 @@ class BaseWeightBoosting(six.with_metaclass(ABCMeta, BaseEnsemble)):
         # * These are the lines that will select the optimal solution set according to
         # * NDS around the preference vectors
         preference_vectors = np.array(self.preference).reshape(-1, self.ob.shape[1])
-        self.optimal_solution_set, index_in_complete_solution_set = PreferenceSurvival(preference_vectors).do(self.ob)
+        survived_solutions, survived_sol_idx, self.optimal_solution_set, index_in_complete_solution_set = PreferenceSurvival(preference_vectors).do(self.ob)
 
 
         if self.debug:
             print ("best partial ensemble at round: "+ str(self.theta ))
-        self.estimators_ = self.estimators_[:self.theta  ]
-        self.estimator_alphas_ = self.estimator_alphas_[:self.theta  ]
+        # self.estimators_ = self.estimators_[:self.theta  ]
+        # self.estimator_alphas_ = self.estimator_alphas_[:self.theta  ]
 
         if self.debug:
             print ("total #weak learners = "+ str(len(self.estimators_) ))
