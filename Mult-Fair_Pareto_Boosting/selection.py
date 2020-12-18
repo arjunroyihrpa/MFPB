@@ -31,7 +31,7 @@ class PreferenceSurvival:
         self.ideal_point = np.full(preference_vectors.shape[1], np.inf)
         self.worst_point = np.full(preference_vectors.shape[1], -np.inf)
 
-    def do(self, solutions, objective_values, n_survive=None, filter_duplicates=True):
+    def do(self, objective_values, n_survive=None, filter_duplicates=True):
         """
         Applies the non-dominated filtering based on the provided preference vectors.
         NDS is applied with respect to the preference vectors. I.e. each solution gets sorted
@@ -129,7 +129,7 @@ class PreferenceSurvival:
         )
 
         # * Select best solution per preference vector here
-        optimal_solutions = solutions[intersect(fronts[0], closest)]
+        optimal_solutions_objective_values = solutions[intersect(fronts[0], closest)]
         running_index = running_index[intersect(fronts[0], closest)]
 
         # ! We don't need that as we are only interested in the best solution
@@ -164,12 +164,12 @@ class PreferenceSurvival:
         #     solutions = solutions[survivors]
 
         if filter_duplicates:
-            optimal_solutions, unique_idx = np.unique(
-                optimal_solutions, return_index=True, axis=0
+            optimal_solutions_objective_values, unique_idx = np.unique(
+                optimal_solutions_objective_values, return_index=True, axis=0
             )
             running_index = running_index[unique_idx]
 
-        return optimal_solutions, running_index
+        return optimal_solutions_objective_values, running_index
 
 
 def associate_to_niches(F, niches, ideal_point, nadir_point, utopian_epsilon=0.0):

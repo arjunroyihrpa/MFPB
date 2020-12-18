@@ -230,25 +230,25 @@ class BaseWeightBoosting(six.with_metaclass(ABCMeta, BaseEnsemble)):
             
         
         #if best_theta==0:
-        def is_pareto(costs, maximise=False):
-            """
-            :param costs: An (n_points, n_costs) array
-            :maximise: boolean. True for maximising, False for minimising
-            :return: A (n_points, ) boolean array, indicating whether each point is Pareto efficient
-            """
-            is_efficient = np.ones(costs.shape[0], dtype = bool)
-            for i, c in enumerate(costs):
-                if is_efficient[i]:
-                    if maximise:
-                        is_efficient[is_efficient] = np.any(costs[is_efficient]>=c, axis=1)  # Remove dominated points
-                    else:
-                        is_efficient[is_efficient] = np.any(costs[is_efficient]<=c, axis=1)  # Remove dominated points
-            return is_efficient
+        # def is_pareto(costs, maximise=False):
+        #     """
+        #     :param costs: An (n_points, n_costs) array
+        #     :maximise: boolean. True for maximising, False for minimising
+        #     :return: A (n_points, ) boolean array, indicating whether each point is Pareto efficient
+        #     """
+        #     is_efficient = np.ones(costs.shape[0], dtype = bool)
+        #     for i, c in enumerate(costs):
+        #         if is_efficient[i]:
+        #             if maximise:
+        #                 is_efficient[is_efficient] = np.any(costs[is_efficient]>=c, axis=1)  # Remove dominated points
+        #             else:
+        #                 is_efficient[is_efficient] = np.any(costs[is_efficient]<=c, axis=1)  # Remove dominated points
+        #     return is_efficient
         best_theta=0
         self.ob=np.array(self.ob)
-        pf=is_pareto(self.ob)
-        self.PF={i:self.ob[i] for i in range(len(pf)) if pf[i]==True}
-        F=np.array(list(self.PF.values()))
+        # pf=is_pareto(self.ob)
+        # self.PF={i:self.ob[i] for i in range(len(pf)) if pf[i]==True}
+        # F=np.array(list(self.PF.values()))
         
         # weights = self.preference  ##Preference Weights
         # best_theta, self.pseudo_weights = get_decision_making("pseudo-weights", weights).do(F, return_pseudo_weights=True)
@@ -256,8 +256,8 @@ class BaseWeightBoosting(six.with_metaclass(ABCMeta, BaseEnsemble)):
 
         # * These are the lines that will select the optimal solution set according to
         # * NDS around the preference vectors
-        preference_vectors = np.array(self.preference).reshape(-1, np.array(F).shape[1])
-        self.optimal_solution_set, index_in_complete_solution_set = PreferenceSurvival(preference_vectors).do(self.ob, F)
+        preference_vectors = np.array(self.preference).reshape(-1, self.ob.shape[1])
+        self.optimal_solution_set, index_in_complete_solution_set = PreferenceSurvival(preference_vectors).do(self.ob)
 
 
         if self.debug:
