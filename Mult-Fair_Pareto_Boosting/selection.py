@@ -57,6 +57,7 @@ class PreferenceSurvival:
             Is equal to at most the number of preference vectors we have.
         """
         # attributes to be set after the survival
+        solutions = objective_values.copy()
         F = objective_values
         # compute the final solution set index in parallel
         running_index = np.arange(len(F))
