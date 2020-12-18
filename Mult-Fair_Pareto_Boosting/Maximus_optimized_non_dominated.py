@@ -256,7 +256,7 @@ class BaseWeightBoosting(six.with_metaclass(ABCMeta, BaseEnsemble)):
 
         # * These are the lines that will select the optimal solution set according to
         # * NDS around the preference vectors
-        preference_vectors = self.preference.reshape(-1, F.shape[1])
+        preference_vectors = np.array(self.preference).reshape(-1, np.array(F).shape[1])
         self.optimal_solution_set, index_in_complete_solution_set = PreferenceSurvival(preference_vectors).do(self.ob, F)
 
 
