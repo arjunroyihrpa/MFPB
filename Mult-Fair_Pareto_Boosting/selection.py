@@ -101,7 +101,7 @@ class PreferenceSurvival:
 
         #  consider only the population until we come to the splitting front
         # ! Only use NDS front
-        I = fronts[0] #np.concatenate(fronts)
+        I = fronts[0]  # np.concatenate(fronts)
         solutions, rank, F, running_index_opt, running_index_survival = (
             solutions[I],
             rank[I],
@@ -129,6 +129,13 @@ class PreferenceSurvival:
         )
         # * Select best solution per preference vector here
         intersection = intersect(fronts[0], closest)
+        # ! If we only select from the NDS front, i.e. I = fronts[0], then
+        # ! closest = index in front[0] with respect to preference direction, i.e.
+        # * The following variable contains tuples of (PREF_VECTOR, ASSOCIATED_SOLUTION, INDEX_OF_THE_SOLUTION)
+        preference_direction_to_solution_mapping = list(
+            zip(self.ref_dirs, solutions[closest], running_index_opt[closest])
+        )
+
         # ! This can be empty if the closest solutions are not in the non-dominated front
         # TODO potentially adjust this
         optimal_solutions_objective_values = solutions[intersection]
@@ -178,6 +185,7 @@ class PreferenceSurvival:
             running_index_survival,
             optimal_solutions_objective_values,
             running_index_opt,
+            preference_direction_to_solution_mapping,
         )
 
 
