@@ -127,9 +127,7 @@ class PreferenceSurvival:
         )
 
         # set the optimum, first front and closest to all reference directions
-        closest = np.unique(
-            dist_matrix[:, np.unique(niche_of_individuals)].argmin(axis=0)
-        )
+        closest = dist_matrix[:, np.unique(niche_of_individuals)].argmin(axis=0)
         # * Select best solution per preference vector here
         intersection = intersect(fronts[0], closest)
         # ! If we only select from the NDS front, i.e. I = fronts[0], then
