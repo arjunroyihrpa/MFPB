@@ -100,7 +100,8 @@ class PreferenceSurvival:
         )
 
         #  consider only the population until we come to the splitting front
-        I = np.concatenate(fronts)
+        # ! Only use NDS front
+        I = fronts[0] #np.concatenate(fronts)
         solutions, rank, F, running_index_opt, running_index_survival = (
             solutions[I],
             rank[I],
