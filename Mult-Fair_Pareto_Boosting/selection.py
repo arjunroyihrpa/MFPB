@@ -25,7 +25,10 @@ class PreferenceSurvival:
         # ! Important
         # ? Is each solution feasible already? Is this is validated before?
         # super().__init__(filter_infeasible=True)
-        self.ref_dirs = preference_vectors
+        # * Invert here because we minimize and higher value in
+        # * preference means smaller value in objective is preferred
+        self.ref_dirs = 1.0 - preference_vectors
+        self.preference_vectors = preference_vectors
         self.extreme_points = None
         self.intercepts = None
         self.nadir_point = None
@@ -133,7 +136,11 @@ class PreferenceSurvival:
         # ! closest = index in front[0] with respect to preference direction, i.e.
         # * The following variable contains tuples of (PREF_VECTOR, ASSOCIATED_SOLUTION, INDEX_OF_THE_SOLUTION)
         preference_direction_to_solution_mapping = list(
-            zip(self.ref_dirs, solutions[closest], running_index_opt[closest])
+            zip(
+                self.preference_vectors[np.unique(niche_of_individuals), :],
+                solutions[closest],
+                running_index_opt[closest],
+            )
         )
 
         # ! This can be empty if the closest solutions are not in the non-dominated front
