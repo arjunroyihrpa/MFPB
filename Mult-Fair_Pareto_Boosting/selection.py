@@ -127,7 +127,7 @@ class PreferenceSurvival:
         )
 
         # set the optimum, first front and closest to all reference directions
-        closest = dist_matrix[:, np.unique(niche_of_individuals)].argmin(axis=0)
+        closest = dist_matrix[:, niche_of_individuals].argmin(axis=0)
         # * Select best solution per preference vector here
         intersection = intersect(fronts[0], closest)
         # ! If we only select from the NDS front, i.e. I = fronts[0], then
@@ -135,7 +135,7 @@ class PreferenceSurvival:
         # * The following variable contains tuples of (PREF_VECTOR, ASSOCIATED_SOLUTION, INDEX_OF_THE_SOLUTION)
         preference_direction_to_solution_mapping = list(
             zip(
-                self.preference_vectors[np.unique(niche_of_individuals), :],
+                self.preference_vectors[niche_of_individuals, :],
                 solutions[closest],
                 running_index_opt[closest],
             )
