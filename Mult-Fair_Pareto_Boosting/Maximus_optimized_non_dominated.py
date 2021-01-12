@@ -29,12 +29,12 @@ import numpy as np
 import sklearn
 from sklearn.base import is_classifier, ClassifierMixin, is_regressor
 from sklearn.ensemble import BaseEnsemble
-from sklearn.ensemble.forest import BaseForest
+from sklearn.ensemble._forest import BaseForest
 #from sklearn.externals 
 import six
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.metrics import r2_score
-from sklearn.tree.tree import BaseDecisionTree, DTYPE, DecisionTreeClassifier
+from sklearn.tree._classes import BaseDecisionTree, DecisionTreeClassifier
 from sklearn.utils.validation import has_fit_parameter, check_is_fitted, check_array, check_X_y, check_random_state
 import statistics as st
 from pymoo.factory import get_decision_making, get_reference_directions
@@ -119,7 +119,7 @@ class BaseWeightBoosting(six.with_metaclass(ABCMeta, BaseEnsemble)):
         if (self.base_estimator is None or
                 isinstance(self.base_estimator, (BaseDecisionTree,
                                                  BaseForest))):
-            dtype = DTYPE
+            dtype = np.float64
             accept_sparse = 'csc'
         else:
             dtype = None
