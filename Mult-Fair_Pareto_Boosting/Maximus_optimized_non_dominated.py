@@ -29,17 +29,17 @@ import numpy as np
 import sklearn
 from sklearn.base import is_classifier, ClassifierMixin, is_regressor
 from sklearn.ensemble import BaseEnsemble
-from sklearn.ensemble._forest import BaseForest
+from sklearn.ensemble.forest import BaseForest
 #from sklearn.externals 
 import six
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.metrics import r2_score
-from sklearn.tree._classes import BaseDecisionTree, DecisionTreeClassifier
+from sklearn.tree.tree import BaseDecisionTree, DTYPE, DecisionTreeClassifier
 from sklearn.utils.validation import has_fit_parameter, check_is_fitted, check_array, check_X_y, check_random_state
 import statistics as st
 from pymoo.factory import get_decision_making, get_reference_directions
 
-from selection import PreferenceSurvival
+from selection_ar import PreferenceSurvival
 
 __all__ = [
     'Multi_Fair'
@@ -119,7 +119,7 @@ class BaseWeightBoosting(six.with_metaclass(ABCMeta, BaseEnsemble)):
         if (self.base_estimator is None or
                 isinstance(self.base_estimator, (BaseDecisionTree,
                                                  BaseForest))):
-            dtype = np.float64
+            dtype = DTYPE
             accept_sparse = 'csc'
         else:
             dtype = None
@@ -257,7 +257,7 @@ class BaseWeightBoosting(six.with_metaclass(ABCMeta, BaseEnsemble)):
         # * These are the lines that will select the optimal solution set according to
         # * NDS around the preference vectors
         preference_vectors = np.array(self.preference).reshape(-1, self.ob.shape[1])
-        survived_solutions, survived_sol_idx, self.optimal_solution_set, self.index_in_complete_solution_set, preference_direction_to_solution_mapping = PreferenceSurvival(preference_vectors).do(F)
+        survived_solutions, survived_sol_idx, self.optimal_solution_set, self.index_in_complete_solution_set, preference_direction_to_solution_mapping,self.map_cosd = PreferenceSurvival(preference_vectors).do(F)
         self.preference_direction_to_solution_mapping=[(a,b,list(self.PF.keys())[c] + 1) for (a,b,c) in preference_direction_to_solution_mapping]
         self.preference_direction_to_solution_mapping.sort(key=lambda tup: tup[2],reverse=True)
 
