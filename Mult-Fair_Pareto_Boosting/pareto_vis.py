@@ -92,8 +92,6 @@ def plot_pareto_front(associations, all_preference_vectors=None):
     # plt.savefig("pareto_front_with_ref_dirs.pdf")
     plt.show()
     
-plot_pareto_front(clf.preference_direction_to_solution_mapping, np.array(clf.preference))
-    
 
 
 if __name__ == "__main__":
