@@ -260,15 +260,17 @@ class BaseWeightBoosting(six.with_metaclass(ABCMeta, BaseEnsemble)):
         self.PF={i:self.ob[i] for i in range(len(pf)) if pf[i]==True}
         F=np.array(list(self.PF.values()))
         
-        # weights = self.preference  ##Preference Weights
-        # best_theta, self.pseudo_weights = get_decision_making("pseudo-weights", weights).do(F, return_pseudo_weights=True)
-        # self.theta = list(self.PF.keys())[best_theta] + 1
+        weights = self.pseudo_weights  ##Preference Weights
+        best_theta, _ = get_decision_making("pseudo-weights", weights).do(F, return_pseudo_weights=True)
+        self.theta = list(self.PF.keys())[best_theta] + 1
 
         # * These are the lines that will select the optimal solution set according to
         # * NDS around the preference vectors
         preference_vectors = np.array(self.preference).reshape(-1, self.ob.shape[1])
-        survived_solutions, survived_sol_idx, self.optimal_solution_set, self.index_in_complete_solution_set, preference_direction_to_solution_mapping,self.map_cosd = PreferenceSurvival(preference_vectors).do(F)
-        self.preference_direction_to_solution_mapping=[(a,b,list(self.PF.keys())[c] + 1) for (a,b,c) in preference_direction_to_solution_mapping]
+        survived_solutions, survived_sol_idx, self.optimal_solution_set, map_cosd = PreferenceSurvival(preference_vectors).do(F)# self.optimal_solution_set, self.index_in_complete_solution_set, preference_direction_to_solution_mapping,
+        
+        self.preference_direction_to_solution_mapping=[(a,b,list(self.PF.keys())[c] + 1) for (a,b,c) in map_cosd]
+        self.preference_direction_to_solution_mapping.append((np.array(weights),F[best_theta],self.theta))
         self.preference_direction_to_solution_mapping.sort(key=lambda tup: tup[2],reverse=True)
 
 
@@ -532,12 +534,12 @@ class Multi_Fair(BaseWeightBoosting, ClassifierMixin):
     def __init__(self,
                  base_estimator=None,
                  n_estimators=50,
-                 learning_rate=1.,
+                 learning_rate=1.,  
                  algorithm='SAMME',
                  random_state=None,
                  saIndex=None,saValue=None,
                  debug=False, 
-                 X_test=None, y_test=None, preference=[0.2,0.4,0.4]):
+                 X_test=None, y_test=None, preference=[[1,0,0]],pseudo_weights=[0.2,0.4,0.4]):
 
         super(Multi_Fair, self).__init__(
             base_estimator=base_estimator,
@@ -551,6 +553,7 @@ class Multi_Fair(BaseWeightBoosting, ClassifierMixin):
         self.saIndex = saIndex
         self.saValue = saValue
         self.algorithm = algorithm
+        self.pseudo_weights=pseudo_weights
 
         self.cost_protected_positive = [1 for i in self.saIndex]
         self.cost_non_protected_positive = [1 for i in self.saIndex]
