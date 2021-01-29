@@ -29,12 +29,12 @@ import numpy as np
 import sklearn
 from sklearn.base import is_classifier, ClassifierMixin, is_regressor
 from sklearn.ensemble import BaseEnsemble
-from sklearn.ensemble.forest import BaseForest
+from sklearn.ensemble._forest import BaseForest
 #from sklearn.externals 
 import six
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.metrics import r2_score
-from sklearn.tree.tree import BaseDecisionTree, DTYPE, DecisionTreeClassifier
+from sklearn.tree._classes import BaseDecisionTree, DecisionTreeClassifier
 from sklearn.utils.validation import has_fit_parameter, check_is_fitted, check_array, check_X_y, check_random_state
 import statistics as st
 from pymoo.factory import get_decision_making, get_reference_directions
@@ -119,7 +119,7 @@ class BaseWeightBoosting(six.with_metaclass(ABCMeta, BaseEnsemble)):
         if (self.base_estimator is None or
                 isinstance(self.base_estimator, (BaseDecisionTree,
                                                  BaseForest))):
-            dtype = DTYPE
+            dtype = np.float64
             accept_sparse = 'csc'
         else:
             dtype = None
@@ -173,6 +173,24 @@ class BaseWeightBoosting(six.with_metaclass(ABCMeta, BaseEnsemble)):
         flag,iboost,best_theta=0,-1,0
         T=self.n_estimators
         self.ob=[]
+        self.all_PF_iterations = []
+
+        #if best_theta==0:
+        def is_pareto(costs, maximise=False):
+             """
+             :param costs: An (n_points, n_costs) array
+             :maximise: boolean. True for maximising, False for minimising
+             :return: A (n_points, ) boolean array, indicating whether each point is Pareto efficient
+             """
+             is_efficient = np.ones(costs.shape[0], dtype = bool)
+             for i, c in enumerate(costs):
+                 if is_efficient[i]:
+                     if maximise:
+                         is_efficient[is_efficient] = np.any(costs[is_efficient]>=c, axis=1)  # Remove dominated points
+                     else:
+                         is_efficient[is_efficient] = np.any(costs[is_efficient]<=c, axis=1)  # Remove dominated points
+             return is_efficient
+
         while (iboost<T ):
             # Boosting step
             iboost+=1
@@ -187,6 +205,12 @@ class BaseWeightBoosting(six.with_metaclass(ABCMeta, BaseEnsemble)):
                 break
             
             self.ob.append([cumulative_loss,balanced_loss,max(fairness)])
+            
+            _ob=np.array(self.ob)
+            _pf=is_pareto(_ob)
+            _PF={i:_ob[i] for i in range(len(_pf)) if _pf[i]==True}
+            _F=np.array(list(_PF.values()))
+            self.all_PF_iterations.append(_F)
             
             #self.ob[2].append()
             
@@ -229,21 +253,7 @@ class BaseWeightBoosting(six.with_metaclass(ABCMeta, BaseEnsemble)):
                 
             
         
-        #if best_theta==0:
-        def is_pareto(costs, maximise=False):
-             """
-             :param costs: An (n_points, n_costs) array
-             :maximise: boolean. True for maximising, False for minimising
-             :return: A (n_points, ) boolean array, indicating whether each point is Pareto efficient
-             """
-             is_efficient = np.ones(costs.shape[0], dtype = bool)
-             for i, c in enumerate(costs):
-                 if is_efficient[i]:
-                     if maximise:
-                         is_efficient[is_efficient] = np.any(costs[is_efficient]>=c, axis=1)  # Remove dominated points
-                     else:
-                         is_efficient[is_efficient] = np.any(costs[is_efficient]<=c, axis=1)  # Remove dominated points
-             return is_efficient
+
         best_theta=0
         self.ob=np.array(self.ob)
         pf=is_pareto(self.ob)
@@ -396,7 +406,7 @@ class BaseWeightBoosting(six.with_metaclass(ABCMeta, BaseEnsemble)):
         if (self.base_estimator is None or
                 isinstance(self.base_estimator,
                            (BaseDecisionTree, BaseForest))):
-            X = check_array(X, accept_sparse='csr', dtype=DTYPE)
+            X = check_array(X, accept_sparse='csr', dtype=np.float64)
 
         else:
             X = check_array(X, accept_sparse=['csr', 'csc', 'coo'])
