@@ -258,18 +258,27 @@ class BaseWeightBoosting(six.with_metaclass(ABCMeta, BaseEnsemble)):
         self.ob=np.array(self.ob)
         pf=is_pareto(self.ob)
         self.PF={i:self.ob[i] for i in range(len(pf)) if pf[i]==True}
+        seq_nr = np.array(list(self.PF.keys()))
         F=np.array(list(self.PF.values()))
+        # ! Filter here
+        # * Round everything to 2 digits and remove the duplicates
+        _F = F.copy()
+        _F = np.around(_F, decimals=2)
+        # * Keep original values but filter the rounded array
+        _, unique_index = np.unique(_F, return_index=True, axis=0)
+        F = F[unique_index, :]
+        seq_nr = seq_nr[unique_index]
         
         weights = self.pseudo_weights  ##Preference Weights
         best_theta, _ = get_decision_making("pseudo-weights", weights).do(F, return_pseudo_weights=True)
-        self.theta = list(self.PF.keys())[best_theta] + 1
+        self.theta = seq_nr[best_theta] + 1
 
         # * These are the lines that will select the optimal solution set according to
         # * NDS around the preference vectors
         preference_vectors = np.array(self.preference).reshape(-1, self.ob.shape[1])
         survived_solutions, survived_sol_idx, self.optimal_solution_set, map_cosd = PreferenceSurvival(preference_vectors).do(F)# self.optimal_solution_set, self.index_in_complete_solution_set, preference_direction_to_solution_mapping,
         
-        self.preference_direction_to_solution_mapping=[(a,b,list(self.PF.keys())[c] + 1) for (a,b,c) in map_cosd]
+        self.preference_direction_to_solution_mapping=[(a,b,seq_nr[c] + 1) for (a,b,c) in map_cosd]
         self.preference_direction_to_solution_mapping.append((np.array(weights),F[best_theta],self.theta))
         self.preference_direction_to_solution_mapping.sort(key=lambda tup: tup[2],reverse=True)
 
