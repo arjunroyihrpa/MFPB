@@ -122,29 +122,30 @@ class PreferenceSurvival:
         last_front = fronts[-1]
 
         # associate individuals to niches
-        niche_of_individuals, dist_to_niche, dist_matrix, map_cosd = associate_to_niches(
+        map_cosd = associate_to_niches(
             F, self.ref_dirs, self.ideal_point, self.nadir_point
         )
 
         # set the optimum, first front and closest to all reference directions
-        closest = dist_matrix[:, np.unique(niche_of_individuals)].argmin(axis=0)
+        ##closest = dist_matrix[:, np.unique(niche_of_individuals)].argmin(axis=0)
         # * Select best solution per preference vector here
-        intersection = intersect(fronts[0], closest)
+        ##intersection = intersect(fronts[0], closest)
         # ! If we only select from the NDS front, i.e. I = fronts[0], then
         # ! closest = index in front[0] with respect to preference direction, i.e.
         # * The following variable contains tuples of (PREF_VECTOR, ASSOCIATED_SOLUTION, INDEX_OF_THE_SOLUTION)
-        preference_direction_to_solution_mapping = list(
-            zip(
-                self.preference_vectors[np.unique(niche_of_individuals), :],
-                solutions[closest],
-                running_index_opt[closest],
-            )
-        )
+        
+        ##preference_direction_to_solution_mapping = list(
+        ##    zip(
+        ##        self.preference_vectors[np.unique(niche_of_individuals), :],
+        ##        solutions[closest],
+        ##        running_index_opt[closest],
+        ##    )
+        ##)
 
         # ! This can be empty if the closest solutions are not in the non-dominated front
         # TODO potentially adjust this
-        optimal_solutions_objective_values = solutions[intersection]
-        running_index_opt = running_index_opt[intersection]
+        ##optimal_solutions_objective_values = solutions[intersection]
+        ##running_index_opt = running_index_opt[intersection]
 
         # ! We don't need that as we are only interested in the best solution
         # ! per preference vector
@@ -161,22 +162,9 @@ class PreferenceSurvival:
             # if some individuals already survived
             else:
                 until_last_front = np.concatenate(fronts[:-1])
-                niche_count = calc_niche_count(
-                    len(self.ref_dirs), niche_of_individuals[until_last_front]
-                )
-                n_remaining = n_survive - len(until_last_front)
+                
 
-            S = niching(
-                solutions[last_front],
-                n_remaining,
-                niche_count,
-                niche_of_individuals[last_front],
-                dist_to_niche[last_front],
-            )
-
-            survivors = np.concatenate((until_last_front, last_front[S].tolist()))
-            solutions = solutions[survivors]
-            running_index_survival = running_index_survival[survivors]
+            
 
         # ! Not stable currently
         # if filter_duplicates:
@@ -188,9 +176,9 @@ class PreferenceSurvival:
         return (
             solutions,
             running_index_survival,
-            optimal_solutions_objective_values,
+            #optimal_solutions_objective_values,
             running_index_opt,
-            preference_direction_to_solution_mapping,
+            #preference_direction_to_solution_mapping,
             map_cosd
         )
 
@@ -206,21 +194,22 @@ def associate_to_niches(F, niches, ideal_point, nadir_point, utopian_epsilon=0.0
 
     # normalize by ideal point and intercepts
     N = (F - utopian_point) / denom
-    dist_matrix = load_function("calc_perpendicular_distance")(N, niches)
+    #dist_matrix = load_function("calc_perpendicular_distance")(N, niches)
 
-    niche_of_individuals = np.argmin(dist_matrix, axis=1)
-    dist_to_niche = dist_matrix[np.arange(F.shape[0]), niche_of_individuals]
+    #niche_of_individuals = np.argmin(dist_matrix, axis=1)
+    #dist_to_niche = dist_matrix[np.arange(F.shape[0]), niche_of_individuals]
     map_cosd=[]
     for v1 in niches:   
-       dmin,v=1,[] 
+       dmin,v,pos=1,[],0 
        for i in range(len(N)):
           d=cosd(1-np.array(v1),np.array(N[i]))
           if d<dmin:
               dmin=d
               v=F[i]
-       map_cosd.append([v1,v])
+              pos=i
+       map_cosd.append([v1,v,pos])
 
-    return niche_of_individuals, dist_to_niche, dist_matrix,map_cosd
+    return map_cosd
 
 
 def niching(solutions, n_remaining, niche_count, niche_of_individuals, dist_to_niche):
