@@ -185,7 +185,7 @@ class PreferenceSurvival:
 
 def associate_to_niches(F, niches, ideal_point, nadir_point, utopian_epsilon=0.0):
     def cosd(v1,v2):
-       return np.dot(v1,v2)/(np.linalg.norm(v1)*np.linalg.norm(v2))
+       return (1-(np.dot(v1,v2)/(np.linalg.norm(v1)*np.linalg.norm(v2))))
  
     utopian_point = ideal_point - utopian_epsilon
 
@@ -202,7 +202,7 @@ def associate_to_niches(F, niches, ideal_point, nadir_point, utopian_epsilon=0.0
     for v1 in niches:   
        dmin,v,pos=1,[],0 
        for i in range(len(N)):
-          d=cosd(1-np.array(v1),np.array(N[i]))
+          d=cosd(np.array(v1),np.array(N[i]))
           if d<dmin:
               dmin=d
               v=F[i]
