@@ -37,7 +37,8 @@ from sklearn.metrics import r2_score
 from sklearn.tree.tree import BaseDecisionTree, DTYPE, DecisionTreeClassifier
 from sklearn.utils.validation import has_fit_parameter, check_is_fitted, check_array, check_X_y, check_random_state
 import statistics as st
-from pymoo.factory import get_decision_making, get_reference_directions
+from pymoo.mcdm.pseudo_weights import PseudoWeights
+from pymoo.util.ref_dirs import get_reference_directions
 __all__ = [
     'Multi_Fair'
 ]
@@ -243,12 +244,24 @@ class BaseWeightBoosting(six.with_metaclass(ABCMeta, BaseEnsemble)):
             return is_efficient
         best_theta=0
         self.ob=np.array(self.ob)
-        pf=is_pareto(self.ob)
-        self.PF={i:self.ob[i] for i in range(len(pf)) if pf[i]==True}
-        F=np.array(list(self.PF.values()))
+        if self.pareto==False:        
+            self.PF={i:self.ob[i] for i in range(len(self.ob))}
+            F=np.array([self.ob[o] for o in range(len(self.ob))])
+        else:
+            pf=is_pareto(self.ob)
+            self.PF={i:self.ob[i] for i in range(len(pf)) if pf[i]==True}
+            F=np.array(list(self.PF.values()))
         
         weights = self.preference  ##Preference Weights
-        best_theta, self.pseudo_weights = get_decision_making("pseudo-weights", weights).do(F, return_pseudo_weights=True)
+        if weights==None:
+            weights=[0.33,0.34,0.33]
+            
+        best_theta, self.pseudo_weights = PseudoWeights(weights).do(F, return_pseudo_weights=True)
+        
+        if self.preference==None:
+            sum_W=[sum((1-self.pseudo_weights[w])*F[w]) for w in range(len(self.PF))]
+            best_theta=sum_W.index(min(sum_W))
+            
         self.theta = list(self.PF.keys())[best_theta] + 1
 
         if self.debug:
@@ -516,7 +529,7 @@ class Multi_Fair(BaseWeightBoosting, ClassifierMixin):
                  random_state=None,
                  saIndex=None,saValue=None,
                  debug=False, 
-                 X_test=None, y_test=None, preference=[0.2,0.4,0.4]):
+                 X_test=None, y_test=None, preference=None, pareto=False):
 
         super(Multi_Fair, self).__init__(
             base_estimator=base_estimator,
@@ -527,6 +540,7 @@ class Multi_Fair(BaseWeightBoosting, ClassifierMixin):
 
         #self.sp = sp
         self.preference=preference ########Initialization of Preference Weight vector
+        self.pareto=pareto
         self.saIndex = saIndex
         self.saValue = saValue
         self.algorithm = algorithm
